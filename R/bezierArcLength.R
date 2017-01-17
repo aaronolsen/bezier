@@ -32,7 +32,7 @@ bezierArcLength <- function(p, t1 = 0, t2 = NULL, deg=NULL, relative.min.slope =
 
 		for(i in 1:seg){
 
-			# FIND T2 OF SUB-INTERVAL 
+			# FIND T2 OF SUB-INTERVAL
 			t2_sub <- min(t2, floor(t1_sub + 1))
 			
 			# CALL BEZIER ARC LENGTH FOR EACH SUB-INTERVAL
