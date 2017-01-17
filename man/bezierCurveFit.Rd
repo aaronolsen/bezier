@@ -7,7 +7,8 @@ Fits a Bezier curve of any degree and dimension to a set of points. A range or p
 \usage{
 bezierCurveFit(m, min.control.points = 3, max.control.points = 20, 
                fix.start.end = FALSE, max.rse = NULL, 
-               max.rse.percent.change = 0.01, na.fill = FALSE)
+               max.rse.percent.change = 0.01, na.fill = FALSE,
+               maxiter = 50, minFactor = 1/1024)
 }
 \arguments{
   \item{m}{a vector or matrix of points to which the Bezier curve is to be fit.}
@@ -17,6 +18,8 @@ bezierCurveFit(m, min.control.points = 3, max.control.points = 20,
   \item{max.rse}{the threshold for residual standard error at which curve fitting is stopped.}
   \item{max.rse.percent.change}{the threshold for percent change in residual standard error at which curve fitting is stopped.}
   \item{na.fill}{logical indicating whether missing points (value of \code{NA}) in \code{m} should be filled by linear interpolation between neighboring non-\code{NA} points. Start and end points cannot be NA.}
+  \item{maxiter}{a positive integer specifying the maximum number of iterations allowed (to be passed to \code{nls} function).}
+  \item{minFactor}{a positive numeric value specifying the minimum step-size factor allowed on any step in the iteration (to be passed to \code{nls} function).}
 }
 \details{
 This function fits a Bezier curve to a vector or matrix of points. If \code{m} is a vector, the fitted curve is unidimensional. If \code{m} is a matrix, a multidimensional fitted curve is returned (where the number of dimensions is equal to \code{ncol(m)}). In either case, the curve fitting is performed on each dimension separately. This can produce different number of control points for each dimension; \code{\link{bezier}} resolves this through degree elevation (\code{\link{elevateBezierDegree}}).
