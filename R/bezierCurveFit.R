@@ -1,10 +1,13 @@
-bezierCurveFit <- function(m, min.control.points = 3, max.control.points = 20, fix.start.end = FALSE, max.rse = NULL, max.rse.percent.change = 0.01, na.fill = FALSE){
+bezierCurveFit <- function(m, min.control.points = 3, max.control.points = 20, 
+	fix.start.end = FALSE, max.rse = NULL, max.rse.percent.change = 0.01, na.fill = FALSE,
+	maxiter = 50, minFactor = 1/1024){
 	# START AND END MUST BE NON-NA
 
 	# MAKE SURE THAT MAX IS GREATER THAN MIN CONTROL POINTS
 	if(min.control.points > max.control.points) stop(paste0("min.control.points (", min.control.points, ") must be less than or equal to max.control.points (", max.control.points, ")"))
 
 	if(na.fill){
+
 		# FIND NA VALUES BASED
 		is_na <- is.na(m[, 1])
 	
@@ -34,6 +37,7 @@ bezierCurveFit <- function(m, min.control.points = 3, max.control.points = 20, f
 
 	# GET T PARAMETER, SAME SIZE AS MATRIX
 	t <- seq(0, 1, length = nrow(m))
+#	t <- seq(0, 2, length = nrow(m))
 	
 	# MODEL FIT PARAMETER LIST
 	p <- list()
@@ -48,12 +52,11 @@ bezierCurveFit <- function(m, min.control.points = 3, max.control.points = 20, f
 	for(i in 1:ncol(m)){
 		#cat(i, '\n')
 
-		# INITIAL PARAMETER VALUES
-		if(fix.start.end){
-			init_param_values <- rep(m[1, 1], min.control.points - 2)
-		}else{
-			init_param_values <- rep(m[1, 1], min.control.points)			
-		}
+		# INDICES OF INPUT POINTS EQUAL TO NUMBER OF CONTROL POINTS
+		init_param_values <- m[seq(1, nrow(m), length=min.control.points), i]
+
+		# REMOVE FIRST AND LAST POINTS FOR FIXED START AND END
+		if(fix.start.end) init_param_values <- init_param_values[2:(length(init_param_values)-1)]
 		
 		# VECTOR FOR SAVING RESIDUAL STANDARD ERROR
 		rse <- rep(NA, max.control.points - 2)
@@ -72,9 +75,12 @@ bezierCurveFit <- function(m, min.control.points = 3, max.control.points = 20, f
 
 			# RUN NON-LINEAR MODEL FIT ON BEZIER CONTROL POINTS (CONSTRAINING START AND END POINTS)
 			if(fix.start.end){
-				model_r <- nls(m[, i] ~ bezier(t=t, p=p, start=m[1, i], end=m[nrow(m), i]), start = list(p = init_param), trace = F, control = nls.control(maxiter = 100, warnOnly = TRUE, minFactor = 1/2048))	#nls.control(maxiter = 100, warnOnly = TRUE)
+				model_r <- nls(m[, i] ~ bezier(t=t, p=p, start=m[1, i], end=m[nrow(m), i]), 
+					start = list(p = init_param), trace = F, control = nls.control(maxiter = maxiter, 
+					warnOnly = TRUE, minFactor = minFactor))	#nls.control(maxiter = 100, warnOnly = TRUE)
 			}else{
-				model_r <- nls(m[, i] ~ bezier(t=t, p=p), start = list(p = init_param), trace = F, control = nls.control(maxiter = 100, warnOnly = TRUE, minFactor = 1/2048))
+				model_r <- nls(m[, i] ~ bezier(t=t, p=p), start = list(p = init_param), trace = F, 
+					control = nls.control(maxiter = maxiter, warnOnly = TRUE, minFactor = minFactor))
 			}
 
 			# SAVE RESIDUAL STANDARD ERROR
@@ -94,7 +100,8 @@ bezierCurveFit <- function(m, min.control.points = 3, max.control.points = 20, f
 			if(!is.null(max.rse.percent.change) && sum(!is.na(rse[2:length(rse)])) >= 3 && sum(!is.na(rse[2:length(rse)])) <= 6){
 
 				# FIND SLOPE OF LAST TEN POINTS
-				rse_deriv <- summary(lm(rse ~ num_param, data=data.frame(num_param=1:length(na.omit(rse[2:length(rse)])), rse=na.omit(rse[2:length(rse)]))))$coefficients[2, 1]
+				rse_deriv <- summary(lm(rse ~ num_param, data=data.frame(num_param=1:length(na.omit(rse[2:length(rse)])), 
+					rse=na.omit(rse[2:length(rse)]))))$coefficients[2, 1]
 
 				# STOP IF MINIMUM PERCENT CHANGE IN RSE IS REACHED
 				#print(abs(rse_deriv/rse[j]))
@@ -105,7 +112,9 @@ bezierCurveFit <- function(m, min.control.points = 3, max.control.points = 20, f
 			if(!is.null(max.rse.percent.change) && sum(!is.na(rse)) > 7){
 			
 				# FIT AN EXPONENTIAL FUNCTION TO RSE VALUES
-				model <- nls(rse ~ b1*exp(b2*num_param) + b3, data=data.frame(num_param=1:length(na.omit(rse)), rse=na.omit(rse)), start=exp_start, control = nls.control(maxiter = 100, warnOnly = TRUE, minFactor = 1/2048))
+				model <- nls(rse ~ b1*exp(b2*num_param) + b3, data=data.frame(num_param=1:length(na.omit(rse)), 
+					rse=na.omit(rse)), start=exp_start, control = nls.control(maxiter = 100, 
+					warnOnly = TRUE, minFactor = 1/2048))
 				#print(data.frame(num_param=1:length(na.omit(rse)), rse=na.omit(rse)))
 
 				# GET PARAMETER ESTIMATES
