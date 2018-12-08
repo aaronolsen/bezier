@@ -1,5 +1,5 @@
 Package: bezier
-Date: 2017-01-15
+Date: 2018-12-08
 Title: Toolkit for Bezier Curves and Splines
 Description: The bezier package is a toolkit for working with Bezier curves and splines. The package provides functions for point generation, arc length estimation, degree elevation and curve fitting.
 Version: 1.1.2

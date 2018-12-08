@@ -8,7 +8,7 @@
 Package: \tab bezier\cr
 Type: \tab Package\cr
 Version: \tab 1.1.2\cr
-Date: \tab 2017-01-16\cr
+Date: \tab 2018-12-08\cr
 License: \tab GPL-2\cr
 }
 }
